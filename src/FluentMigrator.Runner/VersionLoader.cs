@@ -135,6 +135,8 @@ namespace FluentMigrator.Runner
                                         new KeyValuePair<string, object>(VersionTableMetaData.ColumnName, version)
                                     });
             expression.ExecuteWith(Processor);
+
+            Console.WriteLine("Version {0} Deleted", version);
         }
     }
 }

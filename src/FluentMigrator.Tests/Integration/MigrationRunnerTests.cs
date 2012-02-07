@@ -29,6 +29,7 @@ using FluentMigrator.Runner.Processors;
 using FluentMigrator.Runner.Processors.Sqlite;
 using FluentMigrator.Runner.Processors.SqlServer;
 using FluentMigrator.Tests.Integration.Migrations;
+using FluentMigrator.Tests.Integration.Migrations.Interleaved.Pass3;
 using Moq;
 using NUnit.Framework;
 using NUnit.Should;
@@ -481,6 +482,52 @@ namespace FluentMigrator.Tests.Integration
             }
         }
 
+        [Test]
+        public void TestMigrationsShouldApplyMigrationsAndRollbackToCurrentVersion()
+        {
+            // Using SqlServer instead of SqlLite as versions not deleted from VersionInfo table.
+            IntegrationTestOptions.SqlServer2008.IsEnabled = true;
+            IntegrationTestOptions.SqlLite.IsEnabled = false;
+
+            var assembly = typeof(User).Assembly;
+            var migrationsNamespace = typeof(User).Namespace;
+            var runnerContext = new RunnerContext(new TextWriterAnnouncer(System.Console.Out))
+            {
+                Namespace = migrationsNamespace
+            };
+
+            try
+            {
+                ExecuteWithSupportedProcessors(processor =>
+                {
+                    var migrationRunner = new MigrationRunner(assembly, runnerContext, processor);
+
+                    migrationRunner.MigrateUp(200909060930);
+                });
+
+                ExecuteWithSupportedProcessors(processor =>
+                {
+                    var migrationRunner = new MigrationRunner(assembly, runnerContext, processor);
+
+                    migrationRunner.TestMigrations();
+
+                    processor.TableExists(null, "User").ShouldBeTrue();
+                    processor.TableExists(null, "UserRoles").ShouldBeFalse();
+
+                    migrationRunner.VersionLoader.LoadVersionInfo();
+
+                    migrationRunner.VersionLoader.VersionInfo.Latest().ShouldBe(200909060930);
+                }, false);
+            }
+            finally
+            {
+                ExecuteWithSupportedProcessors(processor =>
+                {
+                    var migrationRunner = new MigrationRunner(assembly, runnerContext, processor);
+                    migrationRunner.RollbackToVersion(0);
+                });
+            }
+        }
 
         private static MigrationRunner SetupMigrationRunner(IMigrationProcessor processor)
         {

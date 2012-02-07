@@ -43,7 +43,7 @@ namespace FluentMigrator.Runner
         public IProfileLoader ProfileLoader { get; set; }
         public IMigrationConventions Conventions { get; private set; }
         public IList<Exception> CaughtExceptions { get; private set; }
-
+        
         public MigrationRunner(Assembly assembly, IRunnerContext runnerContext, IMigrationProcessor processor)
         {
             _migrationAssembly = assembly;
@@ -392,5 +392,40 @@ namespace FluentMigrator.Runner
 
             return _stopWatch.ElapsedTime().Ticks;
         }
+
+        public void TestMigrations()
+        {
+            var migrationsToApply = MigrationLoader.Migrations.Keys.Where(v => !VersionLoader.VersionInfo.HasAppliedMigration(v));
+
+            MigrateUpAndDown(migrationsToApply);
+        }
+
+        private void MigrateUpAndDown(IEnumerable<long> migrationsToApply)
+        {
+            try
+            {
+                foreach (var neededMigrationVersion in migrationsToApply)
+                {
+                    ApplyMigrationUp(neededMigrationVersion);
+                }
+
+                foreach (var neededMigrationVersion in migrationsToApply.Reverse())
+                {
+                    ApplyMigrationDown(neededMigrationVersion);
+                }
+
+                ApplyProfiles();
+                
+                Processor.CommitTransaction();
+
+                VersionLoader.LoadVersionInfo();
+            }
+
+            catch (Exception)
+            {
+                Processor.RollbackTransaction();
+                throw;
+            }
+        } 
     }
 }

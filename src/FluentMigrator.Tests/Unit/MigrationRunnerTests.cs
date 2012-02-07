@@ -24,7 +24,9 @@ using FluentMigrator.Infrastructure;
 using FluentMigrator.Runner;
 using FluentMigrator.Runner.Initialization;
 using FluentMigrator.Runner.Processors;
+using FluentMigrator.Runner.Versioning;
 using FluentMigrator.Tests.Integration.Migrations;
+using FluentMigrator.Tests.Unit.Runners.Migrations;
 using Moq;
 using NUnit.Framework;
 using NUnit.Should;
@@ -370,6 +372,24 @@ namespace FluentMigrator.Tests.Unit
 
             //After setup is done, fake version loader owns the proccess
             _fakeVersionLoader.DidLoadVersionInfoGetCalled.ShouldBe(true);
+        }
+
+        [Test]
+        public void TestMigrationsShouldUpAndThenDownUnappliedMigrationsInASingleTransaction()
+        {
+            const long fakeMigration1 = 2011010101;
+            const long fakeMigration2 = 2011010102;
+            const long fakeMigration3 = 2011010103;
+
+            LoadVersionData(fakeMigration1);
+
+            _runner.TestMigrations();
+
+            _fakeVersionLoader.Versions.ShouldContain(fakeMigration1);
+            _fakeVersionLoader.Versions.ShouldNotContain(fakeMigration2);
+            _fakeVersionLoader.Versions.ShouldNotContain(fakeMigration3);
+
+            _fakeVersionLoader.DidRemoveVersionTableGetCalled.ShouldBeFalse();
         }
 
         [Test, Ignore("Move to MigrationLoader tests")]
