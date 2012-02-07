@@ -137,7 +137,7 @@ namespace FluentMigrator.Console
                     },
                     {
                         "task=|t=",
-                        "The task you want FluentMigrator to perform. Available choices are: migrate:up, migrate (same as migrate:up), migrate:down, rollback, rollback:toversion, rollback:all. Default is 'migrate'.",
+                        "The task you want FluentMigrator to perform. Available choices are: migrate:up, migrate (same as migrate:up), migrate:down, rollback, rollback:toversion, rollback:all, test. Default is 'migrate'.",
                         v => { Task = v; }
                     },
                     {
