@@ -132,6 +132,9 @@
     <Compile Include="Announcers\NullAnnouncer.cs" />
     <Compile Include="Announcers\TextWriterAnnouncer.cs" />
     <Compile Include="CompatabilityMode.cs" />
+    <Compile Include="ExpressionsExecutor.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Extensions\SqlServerExtensions.cs" />
     <Compile Include="Generators\Base\ColumnBase.cs" />
     <Compile Include="Extensions\CompatabilityModeExtension.cs" />

@@ -43,6 +43,7 @@ namespace FluentMigrator.Runner
         public IProfileLoader ProfileLoader { get; set; }
         public IMigrationConventions Conventions { get; private set; }
         public IList<Exception> CaughtExceptions { get; private set; }
+        public IExpressionsExecutor ExpressionsExecutor { get; set; }
 
         public MigrationRunner(Assembly assembly, IRunnerContext runnerContext, IMigrationProcessor processor)
         {
@@ -59,6 +60,7 @@ namespace FluentMigrator.Runner
             if (!string.IsNullOrEmpty(runnerContext.WorkingDirectory))
                 Conventions.GetWorkingDirectory = () => runnerContext.WorkingDirectory;
 
+            ExpressionsExecutor = new ExpressionsExecutor(_announcer, Processor, _stopWatch);
             VersionLoader = new VersionLoader(this, _migrationAssembly, Conventions);
             MigrationLoader = new MigrationLoader(Conventions, _migrationAssembly, runnerContext.Namespace);
             ProfileLoader = new ProfileLoader(runnerContext, this, Conventions);
@@ -332,6 +334,18 @@ namespace FluentMigrator.Runner
         /// <param name="expressions"></param>
         protected void ExecuteExpressions(ICollection<IMigrationExpression> expressions)
         {
+            ExpressionsExecutor.Execute(expressions, Conventions, SilentlyFail);
+
+            if (ExpressionsExecutor.CaughtExceptions != null)
+            {
+                foreach (var caughtException in ExpressionsExecutor.CaughtExceptions)
+                {
+                    CaughtExceptions.Add(caughtException);
+                }    
+            }
+
+            return;
+
             long insertTicks = 0;
             int insertCount = 0;
             foreach (IMigrationExpression expression in expressions)
@@ -392,5 +406,40 @@ namespace FluentMigrator.Runner
 
             return _stopWatch.ElapsedTime().Ticks;
         }
+
+        public void TestMigrations()
+        {
+            var migrationsToApply = MigrationLoader.Migrations.Keys.Where(v => !VersionLoader.VersionInfo.HasAppliedMigration(v));
+
+            MigrateUpAndDown(migrationsToApply);
+        }
+
+        private void MigrateUpAndDown(IEnumerable<long> migrationsToApply)
+        {
+            try
+            {
+                foreach (var neededMigrationVersion in migrationsToApply)
+                {
+                    ApplyMigrationUp(neededMigrationVersion);
+                }
+
+                foreach (var neededMigrationVersion in migrationsToApply.Reverse())
+                {
+                    ApplyMigrationDown(neededMigrationVersion);
+                }
+
+                ApplyProfiles();
+                
+                Processor.CommitTransaction();
+
+                VersionLoader.LoadVersionInfo();
+            }
+
+            catch (Exception)
+            {
+                Processor.RollbackTransaction();
+                throw;
+            }
+        } 
     }
 }
