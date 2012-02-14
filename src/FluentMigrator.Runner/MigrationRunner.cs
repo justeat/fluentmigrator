@@ -416,15 +416,11 @@ namespace FluentMigrator.Runner
 
                 ApplyProfiles();
                 
-                Processor.CommitTransaction();
-
                 VersionLoader.LoadVersionInfo();
             }
-
-            catch (Exception)
+            finally
             {
                 Processor.RollbackTransaction();
-                throw;
             }
         } 
     }

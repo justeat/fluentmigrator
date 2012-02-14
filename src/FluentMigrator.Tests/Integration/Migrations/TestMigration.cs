@@ -61,7 +61,7 @@ namespace FluentMigrator.Tests.Integration.Migrations
         {
             //Delete.ForeignKey("FK_Foo").OnTable("Users");
 
-            // Schema.Table("Bar").Exists();
+            Schema.Table("Bar").Exists();
 
             Delete.Table("Bar");
             Delete.Table("Users");

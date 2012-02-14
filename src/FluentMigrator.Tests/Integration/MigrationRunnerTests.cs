@@ -30,6 +30,8 @@ using FluentMigrator.Runner.Processors.Sqlite;
 using FluentMigrator.Runner.Processors.SqlServer;
 using FluentMigrator.Tests.Integration.Migrations;
 using FluentMigrator.Tests.Integration.Migrations.Interleaved.Pass3;
+using FluentMigrator.Tests.Integration.Migrations.Invalid;
+using FluentMigrator.Tests.Integration.Migrations.InvalidForTestMigrations;
 using Moq;
 using NUnit.Framework;
 using NUnit.Should;
@@ -485,7 +487,7 @@ namespace FluentMigrator.Tests.Integration
         [Test]
         public void TestMigrationsShouldApplyMigrationsAndRollbackToCurrentVersion()
         {
-            // Using SqlServer instead of SqlLite as versions not deleted from VersionInfo table.
+            // Using SqlServer instead of SqlLite as versions not deleted from VersionInfo table when using Sqlite.
             IntegrationTestOptions.SqlServer2008.IsEnabled = true;
             IntegrationTestOptions.SqlLite.IsEnabled = false;
 
@@ -512,11 +514,66 @@ namespace FluentMigrator.Tests.Integration
                     migrationRunner.TestMigrations();
 
                     processor.TableExists(null, "User").ShouldBeTrue();
+                    processor.ColumnExists("", "User", "Email").ShouldBeFalse();
                     processor.TableExists(null, "UserRoles").ShouldBeFalse();
 
                     migrationRunner.VersionLoader.LoadVersionInfo();
 
                     migrationRunner.VersionLoader.VersionInfo.Latest().ShouldBe(200909060930);
+                }, false);
+            }
+            finally
+            {
+                ExecuteWithSupportedProcessors(processor =>
+                {
+                    var migrationRunner = new MigrationRunner(assembly, runnerContext, processor);
+                    migrationRunner.RollbackToVersion(0);
+                });
+            }
+        }
+
+        [Test]
+        public void TestMigrationsShouldRollbackIfExceptionThrownByMigration()
+        {
+            // Using SqlServer instead of SqlLite as versions not deleted from VersionInfo table when using Sqlite.
+            IntegrationTestOptions.SqlServer2008.IsEnabled = true;
+            IntegrationTestOptions.SqlLite.IsEnabled = false;
+
+            var assembly = typeof(CreateUsers).Assembly;
+            var migrationsNamespace = typeof(CreateUsers).Namespace;
+            var runnerContext = new RunnerContext(new TextWriterAnnouncer(System.Console.Out))
+            {
+                Namespace = migrationsNamespace
+            };
+
+            try
+            {
+                ExecuteWithSupportedProcessors(processor =>
+                {
+                    var migrationRunner = new MigrationRunner(assembly, runnerContext, processor);
+
+                    migrationRunner.MigrateUp(1);
+                });
+
+                ExecuteWithSupportedProcessors(processor =>
+                {
+                    var migrationRunner = new MigrationRunner(assembly, runnerContext, processor);
+
+                    try
+                    {
+                        migrationRunner.TestMigrations();
+                    }
+                    catch (Exception ex)
+                    {
+                        ex.InnerException.ShouldBeOfType<SqlException>();
+                    }
+
+                    processor.TableExists(null, "Users").ShouldBeTrue();
+                    processor.TableExists(null, "Role").ShouldBeFalse();
+                    
+                    migrationRunner.VersionLoader.LoadVersionInfo();
+
+                    migrationRunner.VersionLoader.VersionInfo.Latest().ShouldBe(1);
                 }, false);
             }
             finally

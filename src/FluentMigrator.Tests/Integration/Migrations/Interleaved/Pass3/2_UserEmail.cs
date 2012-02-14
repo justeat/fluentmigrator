@@ -16,6 +16,8 @@
 //
 #endregion
 
+using System;
+
 namespace FluentMigrator.Tests.Integration.Migrations.Interleaved.Pass3
 {
     [Migration(200909060935)]
