@@ -110,6 +110,12 @@ namespace FluentMigrator.Tests.Unit
         {
             Verify(x => x.TestMigrations(), "test", 0, 0);
         }
+
+		[Test]
+		public void ShouldCallTestMigrationsWithVersionIfSpecified()
+		{
+			Verify(x => x.TestMigrations(123), "test", 123, 0);
+		}
     }
 
     internal class FakeTaskExecutor : TaskExecutor

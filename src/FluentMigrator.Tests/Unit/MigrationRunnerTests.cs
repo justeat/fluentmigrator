@@ -110,6 +110,18 @@ namespace FluentMigrator.Tests.Unit
             _fakeVersionLoader.LoadVersionInfo();
         }
 
+		private void LoadMigrations(params long[] fakeVersions)
+		{
+			_runner.MigrationLoader.Migrations.Clear();
+
+			foreach (var version in fakeVersions)
+			{
+				_runner.MigrationLoader.Migrations.Add(version, new TestMigration());
+			}
+
+			_fakeVersionLoader.LoadVersionInfo();
+		}
+
         /// <summary>Unit test which ensures that the application context is correctly propagated down to each migration class.</summary>
         [Test(Description = "Ensure that the application context is correctly propagated down to each migration class.")]
         public void CanPassApplicationContext()
@@ -381,9 +393,29 @@ namespace FluentMigrator.Tests.Unit
             const long fakeMigration2 = 2011010102;
             const long fakeMigration3 = 2011010103;
 
+			var mockMigration1 = new Mock<IMigration>();
+			var mockMigration2 = new Mock<IMigration>();
+			var mockMigration3 = new Mock<IMigration>();
+
             LoadVersionData(fakeMigration1);
 
+			_runner.MigrationLoader.Migrations.Clear();
+			_runner.MigrationLoader.Migrations.Add(fakeMigration1, mockMigration1.Object);
+			_runner.MigrationLoader.Migrations.Add(fakeMigration2, mockMigration2.Object);
+			_runner.MigrationLoader.Migrations.Add(fakeMigration3, mockMigration3.Object);
+
             _runner.TestMigrations();
+
+			mockMigration1.Verify(m => m.GetUpExpressions(It.IsAny<IMigrationContext>()), Times.Never());
+			mockMigration2.Verify(m => m.GetUpExpressions(It.IsAny<IMigrationContext>()), Times.Once());
+			mockMigration3.Verify(m => m.GetUpExpressions(It.IsAny<IMigrationContext>()), Times.Once());
+
+			mockMigration3.Verify(m => m.GetUpExpressions(It.IsAny<IMigrationContext>()), Times.Once());
+			mockMigration2.Verify(m => m.GetUpExpressions(It.IsAny<IMigrationContext>()), Times.Once());
+			mockMigration1.Verify(m => m.GetUpExpressions(It.IsAny<IMigrationContext>()), Times.Never());
+
+			_processorMock.Verify(m => m.CommitTransaction(), Times.Never());
+			_processorMock.Verify(m => m.RollbackTransaction(), Times.Once());
 
             _fakeVersionLoader.Versions.ShouldContain(fakeMigration1);
             _fakeVersionLoader.Versions.ShouldNotContain(fakeMigration2);
@@ -391,6 +423,73 @@ namespace FluentMigrator.Tests.Unit
 
             _fakeVersionLoader.DidRemoveVersionTableGetCalled.ShouldBeFalse();
         }
+
+		[Test]
+		public void TestMigrationsShouldOnlyApplyMigrationUpToVersionNumber()
+		{
+			const long fakeMigration1 = 2011010101;
+			const long fakeMigration2 = 2011010102;
+			const long fakeMigration3 = 2011010103;
+
+			var mockMigration1 = new Mock<IMigration>();
+			var mockMigration2 = new Mock<IMigration>();
+			var mockMigration3 = new Mock<IMigration>();
+
+			_runner.MigrationLoader.Migrations.Clear();
+			_runner.MigrationLoader.Migrations.Add(fakeMigration1, mockMigration1.Object);
+			_runner.MigrationLoader.Migrations.Add(fakeMigration2, mockMigration2.Object);
+			_runner.MigrationLoader.Migrations.Add(fakeMigration3, mockMigration3.Object);
+
+			_runner.TestMigrations(2011010102);
+
+			mockMigration1.Verify(m => m.GetUpExpressions(It.IsAny<IMigrationContext>()), Times.Once());
+			mockMigration2.Verify(m => m.GetUpExpressions(It.IsAny<IMigrationContext>()), Times.Once());
+			mockMigration3.Verify(m => m.GetUpExpressions(It.IsAny<IMigrationContext>()), Times.Never());
+
+			mockMigration3.Verify(m => m.GetUpExpressions(It.IsAny<IMigrationContext>()), Times.Never());
+			mockMigration2.Verify(m => m.GetUpExpressions(It.IsAny<IMigrationContext>()), Times.Once());
+			mockMigration1.Verify(m => m.GetUpExpressions(It.IsAny<IMigrationContext>()), Times.Once());
+
+			_processorMock.Verify(m => m.CommitTransaction(), Times.Never());
+			_processorMock.Verify(m => m.RollbackTransaction(), Times.Once());
+
+			_fakeVersionLoader.Versions.ShouldNotContain(fakeMigration1);
+			_fakeVersionLoader.Versions.ShouldNotContain(fakeMigration2);
+			_fakeVersionLoader.Versions.ShouldNotContain(fakeMigration3);
+
+			_fakeVersionLoader.DidRemoveVersionTableGetCalled.ShouldBeFalse();
+		}
+
+		[Test]
+		public void TestMigrationsShouldRollbackIfExceptionThrown()
+		{
+			const long fakeMigration1 = 2011010101;
+			const long fakeMigration2 = 2011010102;
+			const long fakeMigration3 = 2011010103;
+
+			LoadVersionData(fakeMigration1);
+
+			_profileLoaderMock.Setup(p => p.ApplyProfiles()).Throws(new Exception("Has rollback been called?"));
+
+			try
+			{
+				_runner.TestMigrations();
+				
+			}
+			catch
+			{
+
+			}
+
+			_processorMock.Verify(m => m.CommitTransaction(), Times.Never());
+			_processorMock.Verify(m => m.RollbackTransaction(), Times.Once());
+
+			_fakeVersionLoader.Versions.ShouldContain(fakeMigration1);
+			_fakeVersionLoader.Versions.ShouldNotContain(fakeMigration2);
+			_fakeVersionLoader.Versions.ShouldNotContain(fakeMigration3);
+
+			_fakeVersionLoader.DidRemoveVersionTableGetCalled.ShouldBeFalse();
+		}
 
         [Test, Ignore("Move to MigrationLoader tests")]
         public void HandlesNullMigrationList()

@@ -395,12 +395,22 @@ namespace FluentMigrator.Runner
 
         public void TestMigrations()
         {
-            var migrationsToApply = MigrationLoader.Migrations.Keys.Where(v => !VersionLoader.VersionInfo.HasAppliedMigration(v));
-
-            MigrateUpAndDown(migrationsToApply);
+            TestMigrations(null);
         }
 
-        private void MigrateUpAndDown(IEnumerable<long> migrationsToApply)
+    	public void TestMigrations(long version)
+    	{
+    		TestMigrations((long?)version);
+    	}
+
+		private void TestMigrations(long? version)
+		{
+			var migrationsToApply = MigrationLoader.Migrations.Keys.Where(v => (!version.HasValue || v <= version) && !VersionLoader.VersionInfo.HasAppliedMigration(v));
+
+			MigrateUpAndDown(migrationsToApply);
+		}
+
+    	private void MigrateUpAndDown(IEnumerable<long> migrationsToApply)
         {
             try
             {
@@ -420,8 +430,8 @@ namespace FluentMigrator.Runner
             }
             finally
             {
-                Processor.RollbackTransaction();
+				Processor.RollbackTransaction();
             }
-        } 
+        }
     }
 }

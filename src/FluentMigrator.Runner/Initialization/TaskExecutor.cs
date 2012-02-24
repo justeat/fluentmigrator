@@ -74,7 +74,10 @@ namespace FluentMigrator.Runner.Initialization
                     Runner.MigrateDown(RunnerContext.Version);
                     break;
                 case "test":
-                    Runner.TestMigrations();
+					if (RunnerContext.Version != 0)
+						Runner.TestMigrations(RunnerContext.Version);
+					else
+						Runner.TestMigrations();
                     break;
             }
 
