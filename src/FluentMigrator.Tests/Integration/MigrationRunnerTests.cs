@@ -26,6 +26,8 @@ using FluentMigrator.Runner.Announcers;
 using FluentMigrator.Runner.Generators.SqlServer;
 using FluentMigrator.Runner.Initialization;
 using FluentMigrator.Runner.Processors;
+using FluentMigrator.Runner.Processors.MySql;
+using FluentMigrator.Runner.Processors.Postgres;
 using FluentMigrator.Runner.Processors.Sqlite;
 using FluentMigrator.Runner.Processors.SqlServer;
 using FluentMigrator.Tests.Integration.Migrations;
@@ -488,8 +490,7 @@ namespace FluentMigrator.Tests.Integration
         public void TestMigrationsShouldApplyMigrationsAndRollbackToCurrentVersion()
         {
             // Using SqlServer instead of SqlLite as versions not deleted from VersionInfo table when using Sqlite.
-            IntegrationTestOptions.SqlServer2008.IsEnabled = true;
-            IntegrationTestOptions.SqlLite.IsEnabled = false;
+            var excludedProcessors = new[] { typeof(SqliteProcessor), typeof(MySqlProcessor), typeof(PostgresProcessor) };
 
             var assembly = typeof(User).Assembly;
             var migrationsNamespace = typeof(User).Namespace;
@@ -505,7 +506,7 @@ namespace FluentMigrator.Tests.Integration
                     var migrationRunner = new MigrationRunner(assembly, runnerContext, processor);
 
                     migrationRunner.MigrateUp(200909060930);
-                });
+                }, false, excludedProcessors);
 
                 ExecuteWithSupportedProcessors(processor =>
                 {
@@ -520,7 +521,7 @@ namespace FluentMigrator.Tests.Integration
                     migrationRunner.VersionLoader.LoadVersionInfo();
 
                     migrationRunner.VersionLoader.VersionInfo.Latest().ShouldBe(200909060930);
-                }, false);
+                }, false, excludedProcessors);
             }
             finally
             {
@@ -528,7 +529,7 @@ namespace FluentMigrator.Tests.Integration
                 {
                     var migrationRunner = new MigrationRunner(assembly, runnerContext, processor);
                     migrationRunner.RollbackToVersion(0);
-                });
+                }, true, excludedProcessors);
             }
         }
 
@@ -536,8 +537,7 @@ namespace FluentMigrator.Tests.Integration
         public void TestMigrationsShouldRollbackIfExceptionThrownByMigration()
         {
             // Using SqlServer instead of SqlLite as versions not deleted from VersionInfo table when using Sqlite.
-            IntegrationTestOptions.SqlServer2008.IsEnabled = true;
-            IntegrationTestOptions.SqlLite.IsEnabled = false;
+            var excludedProcessors = new[] { typeof(SqliteProcessor), typeof(MySqlProcessor), typeof(PostgresProcessor) };
 
             var assembly = typeof(CreateUsers).Assembly;
             var migrationsNamespace = typeof(CreateUsers).Namespace;
@@ -553,7 +553,7 @@ namespace FluentMigrator.Tests.Integration
                     var migrationRunner = new MigrationRunner(assembly, runnerContext, processor);
 
                     migrationRunner.MigrateUp(1);
-                });
+                }, false, excludedProcessors);
 
                 ExecuteWithSupportedProcessors(processor =>
                 {
@@ -574,7 +574,7 @@ namespace FluentMigrator.Tests.Integration
                     migrationRunner.VersionLoader.LoadVersionInfo();
 
                     migrationRunner.VersionLoader.VersionInfo.Latest().ShouldBe(1);
-                }, false);
+                }, false, excludedProcessors);
             }
             finally
             {
@@ -582,7 +582,7 @@ namespace FluentMigrator.Tests.Integration
                 {
                     var migrationRunner = new MigrationRunner(assembly, runnerContext, processor);
                     migrationRunner.RollbackToVersion(0);
-                });
+                }, true, excludedProcessors);
             }
         }
 

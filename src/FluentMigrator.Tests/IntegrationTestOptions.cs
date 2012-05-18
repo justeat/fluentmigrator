@@ -6,14 +6,14 @@ namespace FluentMigrator.Tests
     {
         public static DatabaseServerOptions SqlServer2005 = new DatabaseServerOptions
             {
-                ConnectionString = @"server=.\SQLEXPRESS;uid=;pwd=;Trusted_Connection=yes;database=FluentMigrator",
-                IsEnabled = false
+                ConnectionString = @"server=.\SQLEXPRESS2005;uid=;pwd=;Trusted_Connection=yes;database=FluentMigrator",
+                IsEnabled = true
             };
 
         public static DatabaseServerOptions SqlServer2008 = new DatabaseServerOptions
             {
                 ConnectionString = @"server=.\SQLEXPRESS;uid=;pwd=;Trusted_Connection=yes;database=FluentMigrator",
-                IsEnabled = false
+                IsEnabled = true
             };
 
         public static DatabaseServerOptions SqlLite = new DatabaseServerOptions
@@ -25,13 +25,13 @@ namespace FluentMigrator.Tests
         public static DatabaseServerOptions MySql = new DatabaseServerOptions
             {
                 ConnectionString = @"Database=FluentMigrator;Data Source=localhost;User Id=test;Password=test;",
-                IsEnabled = false
+                IsEnabled = true
             };
 
         public static DatabaseServerOptions Postgres = new DatabaseServerOptions
             {
                 ConnectionString = "Server=127.0.0.1;Port=5432;Database=FluentMigrator;User Id=test;Password=test;",
-                IsEnabled = false
+                IsEnabled = true
             };
 
         public class DatabaseServerOptions
