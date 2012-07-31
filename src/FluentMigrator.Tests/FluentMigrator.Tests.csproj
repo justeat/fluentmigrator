@@ -146,9 +146,25 @@
   <ItemGroup>
     <Compile Include="Helpers\PostgresTestTable.cs" />
     <Compile Include="IntegrationTestOptions.cs" />
+    <Compile Include="Integration\Migrations\Tagged\1_TenantATable.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Integration\Migrations\Tagged\2_TenantBTable.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Integration\Migrations\Tagged\3_NormalTable.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Integration\Migrations\Tagged\4_TenantAandBTable.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Integration\Migrations\InvalidForTestMigrations\1_CreateUsers.cs" />
     <Compile Include="Integration\Migrations\InvalidForTestMigrations\2_AddPermissionToRoles.cs" />
     <Compile Include="Integration\Migrations\TestEmptyMigration.cs" />
+    <Compile Include="Integration\Processors\MySqlProcessorTests.cs" />
+    <Compile Include="Unit\AnnouncerExtensionsTests.cs" />
+    <Compile Include="Unit\Announcers\AnnouncerTests.cs" />
+    <Compile Include="Integration\Migrations\TestUpdateAllRowsMigration.cs" />
     <Compile Include="Unit\Builders\Create\CreateSequenceExpressionBuilderTests.cs" />
     <Compile Include="Unit\Builders\Delete\DeleteConstriantTest.cs" />
     <Compile Include="Unit\Builders\Delete\DeleteDataExpressionTests.cs" />
@@ -176,7 +192,7 @@
     <Compile Include="Integration\SchemaDump\SchemaDumpTests.cs" />
     <Compile Include="Integration\SchemaDump\SchemaTestWriter.cs" />
     <Compile Include="Integration\VersionMigrationTests.cs" />
-    <Compile Include="Unit\AnnouncerTests.cs" />
+    <Compile Include="Unit\Announcers\TextWriterAnnouncerTests.cs" />
     <Compile Include="Unit\AssemblyLoader\AssemblyLoaderTests.cs" />
     <Compile Include="Unit\Builders\Alter\AlterExpressionRootTests.cs" />
     <Compile Include="Unit\Builders\Alter\AlterColumnExpressionBuilderTests.cs" />
@@ -198,6 +214,7 @@
     <Compile Include="Unit\Builders\Schema\SchemaExpressionRootTest.cs" />
     <Compile Include="Unit\Definitions\IndexDefinitionTests.cs" />
     <Compile Include="Unit\Expressions\DeleteDefaultConstraintExpressionTests.cs" />
+    <Compile Include="Unit\Generators\GenericGenerator\GenericGeneratorTests.cs" />
     <Compile Include="Unit\Generators\SqlServer2000\SqlServer2000GeneratorTests.cs" />
     <Compile Include="Unit\Generators\SqlServer2005\SqlServer2005GeneratorTests.cs" />
     <Compile Include="Unit\Initialization\ConnectionStringManagerTests.cs">
@@ -278,6 +295,7 @@
     <Compile Include="Unit\Runners\MigratorConsoleTests.cs" />
     <Compile Include="Unit\Runners\ProcessorFactoryTests.cs" />
     <Compile Include="Integration\Migrations\VersionedMigration.cs" />
+    <Compile Include="Unit\Runners\TagsExtensionsTests.cs" />
     <Compile Include="Unit\StopWatchTests.cs" />
     <Compile Include="Unit\TaskExecutorTests.cs" />
     <Compile Include="Unit\TestVersionLoader.cs" />
