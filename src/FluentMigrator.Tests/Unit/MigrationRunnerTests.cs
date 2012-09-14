@@ -417,6 +417,8 @@ namespace FluentMigrator.Tests.Unit
 			_processorMock.Verify(m => m.CommitTransaction(), Times.Never());
 			_processorMock.Verify(m => m.RollbackTransaction(), Times.Once());
 
+			_announcer.Verify(a => a.Say("Migrations SUCCEEDED."));
+
             _fakeVersionLoader.Versions.ShouldContain(fakeMigration1);
             _fakeVersionLoader.Versions.ShouldNotContain(fakeMigration2);
             _fakeVersionLoader.Versions.ShouldNotContain(fakeMigration3);
@@ -453,6 +455,8 @@ namespace FluentMigrator.Tests.Unit
 			_processorMock.Verify(m => m.CommitTransaction(), Times.Never());
 			_processorMock.Verify(m => m.RollbackTransaction(), Times.Once());
 
+            _announcer.Verify(a => a.Say("Migrations SUCCEEDED."));
+
 			_fakeVersionLoader.Versions.ShouldNotContain(fakeMigration1);
 			_fakeVersionLoader.Versions.ShouldNotContain(fakeMigration2);
 			_fakeVersionLoader.Versions.ShouldNotContain(fakeMigration3);
@@ -474,7 +478,6 @@ namespace FluentMigrator.Tests.Unit
 			try
 			{
 				_runner.TestMigrations();
-				
 			}
 			catch
 			{
@@ -487,6 +490,8 @@ namespace FluentMigrator.Tests.Unit
 			_fakeVersionLoader.Versions.ShouldContain(fakeMigration1);
 			_fakeVersionLoader.Versions.ShouldNotContain(fakeMigration2);
 			_fakeVersionLoader.Versions.ShouldNotContain(fakeMigration3);
+
+			_announcer.Verify(a => a.Error("Migrations FAILED."));
 
 			_fakeVersionLoader.DidRemoveVersionTableGetCalled.ShouldBeFalse();
 		}

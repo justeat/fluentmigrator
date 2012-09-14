@@ -427,6 +427,13 @@ namespace FluentMigrator.Runner
                 ApplyProfiles();
                 
                 VersionLoader.LoadVersionInfo();
+
+                _announcer.Say("Migrations SUCCEEDED.");
+            }
+            catch(Exception)
+			{
+			    _announcer.Error("Migrations FAILED.");
+				throw;
             }
             finally
             {
