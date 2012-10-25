@@ -393,6 +393,23 @@ namespace FluentMigrator.Runner
             return _stopWatch.ElapsedTime().Ticks;
         }
 
+        public void ValidateVersionOrder()
+        {
+            IEnumerable<KeyValuePair<long, IMigration>> unappliedVersions = MigrationLoader.Migrations.Where(kvp => MigrationVersionLessThanGreatestAppliedMigration(kvp.Key));
+
+            if (unappliedVersions.Any())
+            {
+                throw new VersionOrderInvalidException(unappliedVersions);
+            }
+
+            _announcer.Say("Version ordering valid.");
+        }
+
+        private bool MigrationVersionLessThanGreatestAppliedMigration(long version)
+        {
+            return !VersionLoader.VersionInfo.HasAppliedMigration(version) && version < VersionLoader.VersionInfo.Latest();
+        }
+
         public void TestMigrations()
         {
             TestMigrations(null);

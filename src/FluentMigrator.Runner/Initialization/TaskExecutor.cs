@@ -73,6 +73,9 @@ namespace FluentMigrator.Runner.Initialization
                 case "migrate:down":
                     Runner.MigrateDown(RunnerContext.Version);
                     break;
+                case "validateversionorder":
+                    Runner.ValidateVersionOrder();
+                    break;
                 case "test":
 					if (RunnerContext.Version != 0)
 						Runner.TestMigrations(RunnerContext.Version);

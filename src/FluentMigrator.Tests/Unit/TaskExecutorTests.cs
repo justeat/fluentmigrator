@@ -106,6 +106,12 @@ namespace FluentMigrator.Tests.Unit
         }
 
         [Test]
+        public void ShouldCallValidateVersionOrder()
+        {
+            Verify(x => x.ValidateVersionOrder(), "validateversionorder", 0, 0);
+        }
+
+        [Test]
         public void ShouldCallTestMigrationsIfSpecified()
         {
             Verify(x => x.TestMigrations(), "test", 0, 0);
